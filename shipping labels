@@ -1,0 +1,71 @@
+<?php
+/*
+Plugin Name: WooCommerce Shipping Labels
+Description: Generates printable shipping labels for WooCommerce orders.
+Version: 1.0
+Author: Your Name
+*/
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Add a meta box to the order edit page
+add_action('add_meta_boxes', 'wsl_add_shipping_label_meta_box');
+function wsl_add_shipping_label_meta_box() {
+    add_meta_box(
+        'wsl_shipping_label', // Meta box ID
+        'Shipping Label', // Title
+        'wsl_shipping_label_content', // Callback function
+        'shop_order', // Post type (WooCommerce orders)
+        'side', // Context
+        'default' // Priority
+    );
+}
+
+// Meta box content
+function wsl_shipping_label_content($post) {
+    $order = wc_get_order($post->ID);
+
+    // Get order details
+    $order_number = $order->get_order_number();
+    $shipping_name = $order->get_formatted_shipping_full_name();
+    $shipping_address = $order->get_formatted_shipping_address();
+    $billing_phone = $order->get_billing_phone();
+    $order_total = $order->get_formatted_order_total();
+
+    // Output the shipping label
+    echo '<div style="border: 1px solid #ccc; padding: 10px; text-align: center;">';
+    echo '<h3>Shipping Label</h3>';
+    echo '<p><strong>Order Number:</strong> ' . esc_html($order_number) . '</p>';
+    echo '<p><strong>Name:</strong> ' . esc_html($shipping_name) . '</p>';
+    echo '<p><strong>Shipping Address:</strong><br>' . wp_kses_post($shipping_address) . '</p>';
+    echo '<p><strong>Mobile Number:</strong> ' . esc_html($billing_phone) . '</p>';
+    echo '<p><strong>Order Total:</strong> ' . wp_kses_post($order_total) . '</p>';
+    echo '</div>';
+    echo '<button onclick="window.print()" style="margin-top: 10px; width: 100%; padding: 10px; background: #0073aa; color: #fff; border: none; cursor: pointer;">Print Shipping Label</button>';
+}
+
+// Add a print stylesheet
+add_action('admin_head', 'wsl_print_styles');
+function wsl_print_styles() {
+    echo '<style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #wsl_shipping_label, #wsl_shipping_label * {
+                visibility: visible;
+            }
+            #wsl_shipping_label {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+                box-shadow: none;
+            }
+        }
+    </style>';
+}
